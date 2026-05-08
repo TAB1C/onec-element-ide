@@ -1,0 +1,1 @@
+Подтяни или обнови репозиторий https://github.com/TAB1C/onec-element-ide в ~/.codex/skills/onec-element-ide, прочитай ~/.codex/skills/onec-element-ide/SKILL.md и дальше работай по нему для IDE <IDE id или URL>: <опишите задачу>; после правок обязательно проверь, что изменения видны в IDE, сделай commit/sync в IDE Git, опубликуй/обнови приложение и протестируй результат.
