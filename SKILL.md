@@ -15,10 +15,20 @@ When the user provides an IDE URL or id:
 
 1. Normalize it to an IDE URL. Use `scripts/ide_url.py` if helpful.
 2. Open the IDE in the in-app browser and reuse the user's authenticated session. If the IDE redirects to `ide-auth` or shows a login screen, ask the user to log in and then continue from the same tab.
-3. Identify the project, active app, and branch from the status bar. Note signals such as `workspace (Git) - main*`, `Основная ветка (main*)`, and `есть неопубликованные изменения`.
-4. Keep track of any separate deployed application id or app URL if the user also wants live testing.
+3. Ask the user for the console/control-panel key and secret if they were not already provided in the current task. Use them only for the active session and never write them into committed files.
+4. Identify the project, active app, and branch from the status bar. Note signals such as `workspace (Git) - main*`, `Основная ветка (main*)`, and `есть неопубликованные изменения`.
+5. Keep track of any separate deployed application id or app URL if the user also wants live testing.
 
 Use the Browser Use plugin/in-app browser for IDE work. Do not use only console API assemblies when the user expects IDE-visible source changes.
+
+## Required Finish Loop
+
+After every code change, before calling the task complete:
+
+1. Verify that the changes are visible in the IDE source, not only in a local export or deployed assembly.
+2. Commit and synchronize/push the change through IDE Git.
+3. Publish or update the application.
+4. Test the changed behavior and fix regressions found during testing.
 
 ## Edit In IDE Source
 
