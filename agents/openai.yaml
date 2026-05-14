@@ -1,4 +1,4 @@
 interface:
   display_name: "1C:Element IDE"
-  short_description: "Work safely in cloud 1C:Element IDE with Git-visible edits."
-  default_prompt: "Open a 1C:Element IDE workspace by URL or id, make source changes in the IDE, verify them, commit/sync through IDE Git, publish/update the app, and test the result."
+  short_description: "Edit 1C:Element source locally and upload it through the control panel."
+  default_prompt: "Download 1C:Element project source through the control panel, edit files locally, upload the corrected source, verify IDE/Git visibility, publish/update the app, and test the result."

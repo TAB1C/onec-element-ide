@@ -1,53 +1,52 @@
 ---
 name: onec-element-ide
-description: Work in cloud 1C:Element IDE workspaces through the in-app browser, keep edits visible in the IDE and its connected Git repository, and run the publish/update/test loop. Use when the user gives a 1C:Element IDE URL or IDE id, asks to continue development inside cloud Element IDE, wants app code changes to survive Git sync, or needs to avoid the mismatch where a deployed assembly changed but IDE source/Git did not.
+description: Work with 1C:Element cloud projects by downloading source files locally through the control-panel/API flow, editing them in the local workspace, uploading the corrected files back to the control panel, and then verifying the result in the IDE, Git state, published app, and tests. Use when the user gives a 1C:Element IDE URL or id, control-panel credentials, asks to change Element app code, wants changes to survive Git sync, or needs to avoid the mismatch where local/uploaded changes are not visible in IDE/Git.
 ---
 
-# 1C:Element IDE Workflow
+# 1C:Element Cloud Source Workflow
 
 ## Core Rule
 
-Treat the IDE workspace as the source of truth when the user cares about future Git sync. A cloud assembly update alone is not enough: it can make the application run new code while the IDE/Git still contains old code. Do not call the task done until the relevant IDE source files are changed, saved, committed, and synchronized in the IDE Git panel, or until you clearly report that this step is blocked.
+Treat the downloadable source in the control panel as the editable working copy and keep the IDE/Git view as the verification surface. The normal loop is: download files locally, edit in the local workspace, upload/update through the control panel, then confirm that IDE/Git and the published app see the same change. A cloud assembly update alone is not enough if it does not land in the source that the IDE/Git will later pull from.
 
 ## Intake
 
 When the user provides an IDE URL or id:
 
 1. Normalize it to an IDE URL. Use `scripts/ide_url.py` if helpful.
-2. Open the IDE in the in-app browser and reuse the user's authenticated session. If the IDE redirects to `ide-auth` or shows a login screen, ask the user to log in and then continue from the same tab.
-3. Ask the user for the console/control-panel key and secret if they were not already provided in the current task. Use them only for the active session and never write them into committed files.
-4. Identify the project, active app, and branch from the status bar. Note signals such as `workspace (Git) - main*`, `Основная ветка (main*)`, and `есть неопубликованные изменения`.
-5. Keep track of any separate deployed application id or app URL if the user also wants live testing.
+2. Ask the user for the console/control-panel key and secret if they were not already provided in the current task. Use them only for the active session and never write them into committed files.
+3. Use the control-panel/API flow to identify the project, application, source package/files, branch/source version, and published application URL if live testing is needed.
+4. Download the relevant source files or export package into a local working directory before editing.
+5. Open the IDE in the in-app browser only when needed to verify that uploaded changes, source-control state, or published status are visible there. If the IDE redirects to `ide-auth` or shows a login screen, ask the user to log in and then continue from the same tab.
 
-Use the Browser Use plugin/in-app browser for IDE work. Do not use only console API assemblies when the user expects IDE-visible source changes.
+Use the Browser Use plugin/in-app browser for IDE checks. Do not make the IDE editor the primary edit surface unless the control-panel download/upload path is blocked or the user explicitly asks for direct IDE editing.
 
 ## Required Finish Loop
 
 After every code change, before calling the task complete:
 
-1. Verify that the changes are visible in the IDE source, not only in a local export or deployed assembly.
-2. Commit and synchronize/push the change through IDE Git.
-3. Publish or update the application.
-4. Test the changed behavior and fix regressions found during testing.
+1. Upload the corrected local files/package through the control panel.
+2. Verify that the uploaded changes are visible from the IDE/source view, not only in the local workspace or deployed assembly.
+3. Commit and synchronize/push through the connected Git flow if the control panel/IDE exposes Git state for the project.
+4. Publish or update the application.
+5. Test the changed behavior and fix regressions found during testing.
 
-## Edit In IDE Source
+## Local Edit And Upload
 
-Prefer editing files directly in the IDE editor:
+Prefer editing downloaded source files locally:
 
-1. Use the project navigator or quick file search to open each target `.xbsl`/`.yaml` file.
-2. If you prepared code locally from an exported assembly, paste the whole updated file into the IDE only after confirming the target tab is the correct file.
-3. Save after each file.
-4. Verify inside the IDE using editor search:
-   - search for newly added helper names or changed fields;
-   - search for removed hardcoded strings and confirm `Результаты отсутствуют`;
-   - check line breadcrumbs/tabs to ensure the search is in the intended file.
-5. For broad changes, open the IDE Git diff or changed-file list before committing.
+1. Download the project source/export package from the control panel into a local task directory.
+2. Locate each target `.xbsl`/`.yaml` file with `rg`/local search and make the edits locally.
+3. Search the local tree for newly added helper names, changed fields, and removed hardcoded strings before upload.
+4. Rebuild/repack the source package only with the intended file changes.
+5. Upload the changed files/package back through the control-panel/API flow.
+6. After upload, verify in the IDE or control-panel source view that the same file content is now visible there.
 
-Avoid the trap of editing only `.tmp` exports, generated ZIPs, or local scratch copies. Those are useful for preparing patches and smoke tests, but they do not protect the IDE Git source from later overwrite.
+Avoid the trap of editing local exports without uploading them back to the control panel. Local files are only a staging area; the task is not finished until the control panel accepts the upload and the cloud source reflects the change.
 
 ## Git Discipline In IDE
 
-Before committing:
+When the project exposes Git state through the IDE or control panel:
 
 1. Open the source control panel in the IDE.
 2. Confirm the changed-file count and filenames match the task. For example, a focused server/model fix should show only files such as `Prompt` and `ИнтеграцияСС`, not unrelated metadata churn.
@@ -56,11 +55,11 @@ Before committing:
 5. Use the IDE action that commits and synchronizes/pushes, such as `Зафиксировать и отправить`, or commit then run `Синхронизировать изменения`.
 6. Wait for a success signal such as `Синхронизация успешно завершена`, `Изменения 0`, or a clean branch status.
 
-If the IDE says `Репозиторий не найден`, API branch endpoints are unavailable, or the Git panel does not expose commit controls, report the blocker and leave a Git-applicable patch as a fallback. Do not imply the change is safely in Git.
+If the IDE says `Репозиторий не найден`, API branch endpoints are unavailable, or the Git panel does not expose commit controls, report the blocker and leave a Git-applicable patch/source upload record as a fallback. Do not imply the change is safely in Git.
 
 ## Publish And Test Loop
 
-After the IDE/Git source is protected:
+After the uploaded source is visible in the cloud project:
 
 1. Publish/rebuild/update the app through the IDE command (`1C: Опубликовать проект`, `1C: Пересобрать проект`) or through documented console API commands.
 2. If using console API assemblies, verify the final application source version/status after update.
@@ -70,11 +69,11 @@ After the IDE/Git source is protected:
    - backend 4xx/5xx responses after the wrapper mapping is correct may be service-side;
    - timeouts should be reported with endpoint, payload shape, and whether direct backend calls behave differently.
 
-When a user asks "why don't I see the change in IDE?", immediately check whether prior work changed an exported assembly instead of the IDE workspace. Move or replay the patch into the IDE source and commit/sync it.
+When a user asks "why don't I see the change in IDE?", immediately check whether prior work changed only local files, a temporary export, or a deployed assembly. Upload/replay the patch into the control-panel source and then verify IDE/Git visibility.
 
 ## Console API Use
 
-Use console API for app metadata, export/import, assembly upload, update, and status checks. Prefer official 1C:Element console API documentation when endpoint details matter. Keep credentials out of committed files; pass them as environment variables or session-only values.
+Use console/control-panel API for app metadata, source download/export, source upload/import, assembly upload, update, and status checks. Prefer official 1C:Element console API documentation when endpoint details matter. Keep credentials out of committed files; pass them as environment variables or session-only values.
 
 Common observations:
 

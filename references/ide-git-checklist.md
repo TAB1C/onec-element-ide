@@ -1,36 +1,34 @@
-# IDE Git Checklist
+# Control Panel Upload And IDE/Git Checklist
 
-Use this checklist when a 1C:Element change must be visible in the cloud IDE and protected in Git.
+Use this checklist when a 1C:Element change is edited locally through a downloaded source/export and must then become visible in the cloud IDE and protected in Git.
 
 ## Before Editing
 
-- Confirm the browser is on the IDE workspace, not only the published app.
-- If the IDE URL redirects to login, wait for the user to authenticate in the same in-app browser.
-- Read the status bar:
-  - active application name;
-  - branch name;
-  - Git source-control status;
-  - unsaved/unpublished markers.
-- If code was already changed through exported assemblies, keep that export as a patch source but replay it into IDE files.
+- Confirm the control-panel key and secret are available for the active session.
+- Download the current source/export from the control panel before editing.
+- Record the active application, source/package version, branch/Git state if exposed, and published app URL if live testing is needed.
+- If code was already changed only in local scratch files or a deployed assembly, keep that change as a patch source but upload/replay it into the control-panel source.
 
-## Editing
+## Local Editing
 
-- Open each target file from the navigator or quick search.
-- Confirm the tab path/breadcrumb before replacing content.
-- Save every edited file.
-- In each edited file, search for:
+- Open each target file from the downloaded local source tree.
+- Confirm the path before replacing content.
+- Save every edited file locally.
+- Search the local tree for:
   - the new helper/function names;
   - removed hardcoded strings;
   - key request fields such as `model`, `user_id`, `dataset_id`, or endpoint URL builders.
 - If a removed hardcode still appears as a deliberate fallback, distinguish fallback from direct service call.
+- Upload the corrected files/package back through the control panel.
+- Verify in IDE/source view that the uploaded content is visible in the cloud project.
 
 ## Source Control
 
-- Open the IDE source-control panel.
+- Open the IDE/control-panel source-control view when available.
 - Confirm the changed-file count and names.
 - If unrelated files appear, use manual change selection or ask before committing.
 - Commit with a short production-oriented Russian message.
-- Push/synchronize from the IDE and wait for a positive signal:
+- Push/synchronize and wait for a positive signal:
   - `Синхронизация успешно завершена`;
   - `Изменения 0`;
   - clean branch badge without `*`.
@@ -47,7 +45,8 @@ Use this checklist when a 1C:Element change must be visible in the cloud IDE and
 
 ## Failure Modes
 
-- **Assembly changed, IDE did not:** source was edited in an export or uploaded as an assembly only. Replay the patch into IDE source and commit.
+- **Local files changed, IDE did not:** the edited export was not uploaded or the upload targeted the wrong project/source version. Upload/replay the patch into the control-panel source and verify IDE visibility.
+- **Assembly changed, source did not:** an assembly was uploaded without updating the source tracked by IDE/Git. Replay the patch into the control-panel source and commit/sync if available.
 - **Console token does not access IDE API:** use browser `ide-auth` session through the in-app browser.
 - **IDE Git panel says repository not found:** report blocker; preserve a patch file; do not claim Git is protected.
 - **Smoke test times out after wrapper mapping is correct:** test direct backend if possible and report likely backend/service issue.
